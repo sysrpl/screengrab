@@ -11,7 +11,7 @@ namespace screengrab.Views;
 /// Uploads a capture to Amazon S3, as PNG, GIF or JPG, under a file name of the user's choice,
 /// into the bucket and folder set with the gear button. When the upload is done, the file's link
 /// (on the bucket's CloudFront domain, if it has one) goes on the clipboard, opens in the default
-/// browser, and the window closes.
+/// browser, and the window closes with an <see cref="S3Upload"/>.
 /// </summary>
 public partial class S3UploadWindow : DialogWindow
 {
@@ -163,7 +163,7 @@ public partial class S3UploadWindow : DialogWindow
             // Remember the format for next time.
             _settings.Format = extension;
             try { _store.Save(_settings); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
-            CloseWith(url);
+            CloseWith(new S3Upload(_settings.Bucket, key, url));
         }
         catch (OperationCanceledException)
         {

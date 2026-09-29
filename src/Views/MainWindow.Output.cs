@@ -59,7 +59,8 @@ public partial class MainWindow
         {
             var path = ImageFiles.NewPath(folder, image.Time);
             await Task.Run(() => ImageEncoder.Save(image, path));
-            item.SavedPath = path;
+            item.AddSavedPath(path);
+            SaveHistory();
             SetStatus($"Saved {OutputDescription(image)} as {ImageFiles.Display(path)}.");
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -74,8 +75,24 @@ public partial class MainWindow
             return;
         if (await SaveImage.SaveAsAsync(this, image, ImageFiles.Folder(_settings)) is not { } path)
             return;
-        item.SavedPath = path;
+        item.AddSavedPath(path);
+        SaveHistory();
         SetStatus($"Saved {OutputDescription(image)} as {ImageFiles.Display(path)}.");
+    }
+
+    private async void CopyLink_Click(object? sender, RoutedEventArgs e)
+    {
+        if (CurrentItem?.LatestUpload?.Url is not { } url || Clipboard is not { } clipboard)
+            return;
+        try
+        {
+            await clipboard.SetTextAsync(url);
+            SetStatus($"Copied {url} to the clipboard.");
+        }
+        catch (Exception)
+        {
+            SetStatus("Couldn't copy to the clipboard.");
+        }
     }
 
     private async void OpenFolder_Click(object? sender, RoutedEventArgs e)

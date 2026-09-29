@@ -27,7 +27,7 @@ public static class S3Uploader
     /// <summary>Whether something is already stored under <paramref name="key"/>.</summary>
     public static async Task<bool> ExistsAsync(S3Settings settings, string key, CancellationToken cancellationToken = default)
     {
-        using var client = Client(settings, await BucketRegionAsync(settings, cancellationToken));
+        using var client = Client(settings, await BucketRegionAsync(settings, settings.Bucket, cancellationToken));
         try
         {
             await client.GetObjectMetadataAsync(settings.Bucket, key, cancellationToken);
@@ -47,7 +47,7 @@ public static class S3Uploader
     public static async Task<string> UploadAsync(S3Settings settings, string key, byte[] data, string contentType,
         CancellationToken cancellationToken = default)
     {
-        var region = await BucketRegionAsync(settings, cancellationToken);
+        var region = await BucketRegionAsync(settings, settings.Bucket, cancellationToken);
         using var client = Client(settings, region);
         using var stream = new MemoryStream(data);
         await client.PutObjectAsync(new PutObjectRequest
@@ -62,6 +62,31 @@ public static class S3Uploader
 
         var distribution = await CloudFrontLookup.FindAsync(Credentials(settings), settings.Bucket, cancellationToken);
         return distribution?.UrlFor(key) ?? PublicObjectUrl(settings.Bucket, region, key);
+    }
+
+    /// <summary>
+    /// Deletes an uploaded file, with the keys in <paramref name="settings"/> (S3 reports success
+    /// when it's already gone), then clears it from the cache of every CloudFront distribution
+    /// serving the bucket. Throws if S3 refuses; returns null, or why the cache couldn't be
+    /// cleared (the file is deleted all the same).
+    /// </summary>
+    public static async Task<string?> DeleteAsync(S3Settings settings, S3Upload upload, CancellationToken cancellationToken = default)
+    {
+        using (var client = Client(settings, await BucketRegionAsync(settings, upload.Bucket, cancellationToken)))
+            await client.DeleteObjectAsync(upload.Bucket, upload.Key, cancellationToken);
+
+        var credentials = Credentials(settings);
+        try
+        {
+            foreach (var distribution in await CloudFrontLookup.FindAllAsync(credentials, upload.Bucket, cancellationToken))
+                await CloudFrontLookup.InvalidateAsync(credentials, distribution, upload.Key, cancellationToken);
+            return null;
+        }
+        catch (Exception ex) when (ex is AmazonServiceException or AmazonClientException or HttpRequestException)
+        {
+            return $"CloudFront may keep showing {upload.Url} until its cache expires, as the invalidation " +
+                $"failed (the keys need cloudfront:CreateInvalidation): {ex.Message}";
+        }
     }
 
     /// <summary>
@@ -95,12 +120,12 @@ public static class S3Uploader
         string.Join("/", key.Split('/').Select(Uri.EscapeDataString));
 
     /// <summary>Buckets live in a specific region, and requests must go to that region.</summary>
-    private static async Task<string> BucketRegionAsync(S3Settings settings, CancellationToken cancellationToken)
+    private static async Task<string> BucketRegionAsync(S3Settings settings, string bucket, CancellationToken cancellationToken)
     {
         try
         {
             using var client = Client(settings, settings.Region);
-            var response = await client.GetBucketLocationAsync(settings.Bucket, cancellationToken);
+            var response = await client.GetBucketLocationAsync(bucket, cancellationToken);
             return response.Location?.Value switch
             {
                 null or "" => "us-east-1",  // S3 reports us-east-1 as an empty location

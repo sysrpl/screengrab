@@ -35,7 +35,7 @@ If a menu was open when you pressed Print Screen, that program still holds the m
 
 ## Uploading to Amazon S3
 
-**Cloud** opens the **Cloud** window: choose the format (PNG, GIF or JPG) and the file name (the date and time to start with), then **Upload**. The line below shows where it will go (`s3://bucket/folder/name.png`); if a file with that name is already there, you're asked before it's replaced. When the upload is done, the file's link is copied to the clipboard and opened in your default browser, and the window closes.
+**Cloud** opens the **Cloud** window: choose the format (PNG, GIF or JPG) and the file name (the date and time to start with), then **Upload**. The line below shows where it will go (`s3://bucket/folder/name.png`); if a file with that name is already there, you're asked before it's replaced. When the upload is done, the file's link is copied to the clipboard and opened in your default browser, and the window closes. To copy the link again later, select the capture in the main window and click **Copy link**; the link is kept for as long as the capture is in the list, between sessions too.
 
 The link uses the bucket's CloudFront domain when a CloudFront distribution serves the bucket (its alternate domain name, such as `https://images.example.com/folder/name.png`, or else its `dxxxx.cloudfront.net` name, allowing for the distribution's origin path), found the same way S3 File Explorer finds it. Otherwise it's the S3 URL (`https://bucket.s3.region.amazonaws.com/folder/name.png`).
 
@@ -43,19 +43,19 @@ Uploads are public: each file is stored with the canned ACL `public-read`, so it
 
 The gear button, to the left of **Upload** in the title bar, opens **Settings**, with **Cancel** and **OK** in its title bar. It sets your AWS access key ID and secret access key, the region, the bucket (type it, or **Choose** from the buckets your keys can see) and the folder in it. They're kept encrypted (AES 256 in GCM mode) in `~/.config/screengrab/s3.dat`, with the key in `s3.key` beside it, both readable only by you, the same way S3 File Explorer keeps its profiles. The format you last uploaded is remembered.
 
-The keys need `s3:PutObject` and `s3:PutObjectAcl` on the folder; `s3:GetObject` (to check for an existing file), `s3:ListAllMyBuckets` (for **Choose**), `s3:GetBucketLocation` and `cloudfront:ListDistributions` (for CloudFront links) are used when allowed.
+The keys need `s3:PutObject` and `s3:PutObjectAcl` on the folder; `s3:GetObject` (to check for an existing file), `s3:ListAllMyBuckets` (for **Choose**), `s3:GetBucketLocation` and `cloudfront:ListDistributions` (for CloudFront links) are used when allowed. **Delete everywhere** in the main window needs `s3:DeleteObject`, and `cloudfront:CreateInvalidation` to clear CloudFront's cache.
 
 ## Features
 
 * **A hotkey that always works**: Print Screen, or Shift, Ctrl, Alt or Super with Print Screen. It works while menus, dropdown lists and drags are in progress, and only listens: the key still goes wherever it would have gone.
 * **Every monitor**: the screenshot covers the whole desktop. **Select screen** selects one monitor's part of it.
 * **Uploading to S3**, with the file's link (on the bucket's CloudFront domain when it has one) copied to the clipboard and opened in the browser.
-* **The main window** keeps this session's captures and can select, copy and save again: drag on a capture to select part of it (drag inside the rectangle to move it), then Copy, Save or Save as.
+* **The main window** keeps your latest captures and can select, copy and save again: drag on a capture to select part of it (drag inside the rectangle to move it), then Copy, Save or Save as. **Copy link** copies the link to a capture's last upload to S3.
 * **Copy and save**: the clipboard gets a PNG. Files can be PNG, JPG (quality 92) or GIF; a GIF keeps a screenshot's exact colours when it has 256 or fewer, and otherwise gets the best 256 (median cut). **Save** in the main window saves a PNG in the save folder, named with the date and time.
 * **Delayed screenshots**: hide the window, wait a few seconds (1 to 60), then take the screenshot and select as above.
 * **Mouse pointer**: optionally drawn into the screenshot.
 * **Zoom**: fit the screenshot in the window, or 100%; Ctrl+wheel zooms from 12.5% to 800% around the pointer, with sharp pixels from 100% up.
-* **This session's captures**: the last 12, with thumbnails, down the right of the main window.
+* **Recent captures**: the last 12, with thumbnails, down the right of the main window, kept between sessions. The trash button (Delete) removes one from the list; **Delete everywhere** beside it (Shift+Delete) also deletes every file it was saved to and every upload to S3, after asking.
 * **System tray**: Screen Grab starts in the tray, without the window; click the tray icon (or start it again) to show it. Closing the window leaves Screen Grab in the tray, listening for the hotkey. The tray menu takes screenshots and quits.
 * **Cinnamon's shortcuts**: Cinnamon uses every Print Screen combination for its own screenshots, so without a menu open both programs would take one. Preferences shows when the hotkey clashes and can take the shortcut from Cinnamon, and give it back later.
 * **Start at login**, in the tray.
@@ -112,6 +112,7 @@ In the main window:
 | Arrow keys | Move the selection 1 pixel (10 with Shift) |
 | Ctrl+wheel | Zoom around the pointer |
 | Delete | Remove the screenshot from the list (saved files are kept) |
+| Shift+Delete | Delete everywhere: every saved file, every upload to S3, and the list entry |
 | Ctrl+Q | Quit |
 
 ### From the command line
@@ -129,7 +130,8 @@ screengrab --capture --pointer        # include the mouse pointer
 * On X11 the clipboard lives in the program that copied, so a copied screenshot can be pasted only while Screen Grab is running. It stays running in the tray, so that's normally no problem.
 * Taking a shortcut from Cinnamon changes Cinnamon's own settings (`org.cinnamon.desktop.keybindings.media-keys`), and Screen Grab remembers what it took. **Give it back** in Preferences puts it back. You can also restore Cinnamon's defaults by hand, for example with `gsettings reset org.cinnamon.desktop.keybindings.media-keys screenshot`.
 * The capture, **Cloud** and **Settings** windows draw their own title bars, in the style of Cinnamon's header bars, instead of Cinnamon's: the window's buttons sit in it, the round button on the left closes the window, and dragging the bar (between its buttons) moves it. The top corners are rounded and the bottom ones square, and each window draws its own shadow in a 20px transparent margin, as Cinnamon doesn't draw one for these windows. The corners and shadow need a compositor, which Cinnamon always has. These windows can't be resized, and aren't meant to be.
-* Screenshots are kept uncompressed in memory (4 bytes a pixel), which is why the list keeps only the last 12.
+* Screenshots are kept uncompressed in memory (4 bytes a pixel), which is why the list keeps only the last 12. Between sessions they're kept as PNG files.
+* Each capture's entry in `history.json` lists every file it was saved to and every upload (bucket, key and link), so **Delete everywhere** can delete them all and **Copy link** copies the latest link. After deleting an upload, it asks each CloudFront distribution serving the bucket to invalidate the file's path, so the file stops being served from CloudFront's cache; CloudFront finishes that by itself, usually within a few minutes. If the invalidation is refused, the file is still deleted from S3 and you're told the cache may show it until it expires.
 * When a screenshot is taken from the window (Capture, or a delayed one), the window hides first and comes back afterwards, so it isn't in the picture.
 * The full screen selection window is an *override redirect* window: the window manager leaves it alone, so it can cover every monitor and the panel. It also grabs the mouse and keyboard while it's open, because Cinnamon's panel keeps an input area of its own on top: without the grab, presses over the panel went to the panel. Avalonia doesn't expose its connection to the X server, so the grab finds it through Avalonia's internals; that's tied to Avalonia 11.3.22, and if a later Avalonia changes them, the grab is quietly skipped.
 
@@ -141,6 +143,7 @@ screengrab --capture --pointer        # include the mouse pointer
 | S3 keys, bucket and folder (encrypted) | `~/.config/screengrab/s3.dat` and `s3.key` |
 | Start at login | `~/.config/autostart/screengrab.desktop` |
 | Screenshots | `~/Pictures/Screenshots/`, or the folder set in Preferences |
+| The list of recent captures, with every save and upload | `~/.local/share/screengrab/history/` (`history.json` and a PNG for each) |
 | One copy check | `$XDG_RUNTIME_DIR/screengrab.sock`, while it's running |
 
 ## Project layout
@@ -154,9 +157,11 @@ src/
   Interop/                Xlib, XInput 2 and XFixes functions; override-redirect windows
   Services/               the hotkey listener (raw key events), screen capture, PNG / JPG
                           (Skia) and GIF encoders, the clipboard, S3 uploads and the
-                          CloudFront lookup, the encrypted S3 settings, Cinnamon's
-                          shortcuts, settings, file names, start at login
-  Models/                 the captured picture, history items, hotkeys, S3 settings
+                          CloudFront lookup, the encrypted S3 settings, the list of
+                          recent captures, Cinnamon's shortcuts, settings, file names,
+                          start at login
+  Models/                 the captured picture, history items, hotkeys, S3 settings and
+                          uploads
   Controls/CaptureView.cs the zoomable screenshot with its selection rectangle
   Views/                  main window, the full-screen selection window, the capture
                           window (copy / save / cloud), Cloud (the S3 upload) and its

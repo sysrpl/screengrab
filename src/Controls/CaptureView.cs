@@ -138,7 +138,11 @@ public sealed class CaptureView : Control
         }
     }
 
-    /// <summary>Where the picture is drawn, centred when it's smaller than the control.</summary>
+    /// <summary>
+    /// Where the picture is drawn, centred when it's smaller than the control. The corner is
+    /// rounded down to a whole screen pixel: at 100% and above the picture is drawn without
+    /// smoothing, and half a pixel off the grid would double some rows and columns and drop others.
+    /// </summary>
     private Rect ImageRect
     {
         get
@@ -148,7 +152,10 @@ public sealed class CaptureView : Control
             var scale = Scale;
             var width = Source.PixelSize.Width * scale;
             var height = Source.PixelSize.Height * scale;
-            return new Rect(Math.Max(0, (Bounds.Width - width) / 2), Math.Max(0, (Bounds.Height - height) / 2), width, height);
+            var renderScaling = RenderScaling;
+            var left = Math.Floor(Math.Max(0, (Bounds.Width - width) / 2) * renderScaling) / renderScaling;
+            var top = Math.Floor(Math.Max(0, (Bounds.Height - height) / 2) * renderScaling) / renderScaling;
+            return new Rect(left, top, width, height);
         }
     }
 

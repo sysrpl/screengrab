@@ -142,7 +142,18 @@ public partial class MainWindow
         var item = AddToHistory(captured);
         SetStatus($"{captured.Time:HH:mm:ss}: captured {captured.Width} × {captured.Height}.");
         var result = new CaptureResultWindow(captured, () => ImageFiles.Folder(_settings));
-        result.Closed += (_, _) => item.SavedPath = result.SavedPath ?? item.SavedPath;
+        result.Saved += path =>
+        {
+            item.AddSavedPath(path);
+            SaveHistory();
+        };
+        result.Uploaded += upload =>
+        {
+            item.AddUpload(upload);
+            SaveHistory();
+            if (CurrentItem == item)
+                CopyLinkButton.IsEnabled = true;
+        };
         result.Show();
     }
 

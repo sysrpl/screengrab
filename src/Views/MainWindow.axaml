@@ -6,7 +6,7 @@
         x:Class="screengrab.Views.MainWindow"
         Title="Screen Grab"
         Width="1180" Height="760"
-        MinWidth="900" MinHeight="420"
+        MinWidth="1010" MinHeight="420"
         WindowStartupLocation="CenterScreen">
 
     <Window.Styles>
@@ -102,6 +102,14 @@
                             <TextBlock Classes="label" Text="Folder" />
                         </StackPanel>
                     </Button>
+                    <Button x:Name="CopyLinkButton" Click="CopyLink_Click"
+                            h:Tip.Title="Copy link"
+                            h:Tip.Text="Copy the link to this screenshot's last upload to S3.">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Classes="icon" Text="&#xF0337;" />
+                            <TextBlock Classes="label" Text="Copy link" />
+                        </StackPanel>
+                    </Button>
 
                     <Border Classes="divider" />
 
@@ -138,6 +146,12 @@
         <Border DockPanel.Dock="Right" Width="200" Background="{DynamicResource MintViewBrush}">
             <DockPanel>
                 <DockPanel DockPanel.Dock="Top" Margin="12,8,8,8">
+                    <Button x:Name="DeleteEverywhereButton" Classes="icon" DockPanel.Dock="Right" Margin="4,0,0,0"
+                            Click="DeleteEverywhere_Click"
+                            h:Tip.Title="Delete everywhere (Shift+Delete)"
+                            h:Tip.Text="Delete the file it was saved to and its upload to S3, and remove it from the list.">
+                        <TextBlock Classes="icon" Text="&#xF0B89;" />
+                    </Button>
                     <Button x:Name="DeleteButton" Classes="icon" DockPanel.Dock="Right" Click="Delete_Click"
                             h:Tip.Title="Remove (Delete)"
                             h:Tip.Text="Remove this screenshot from the list. Files it was saved to are kept.">

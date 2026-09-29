@@ -80,8 +80,8 @@ public partial class CaptureResultWindow : Window
         OverlayWindow.LowerOneStep(this);
     }
 
-    /// <summary>A path the capture was saved to, if any.</summary>
-    public string? SavedPath { get; private set; }
+    /// <summary>Raised with the file's path after each save.</summary>
+    public event Action<string>? Saved;
 
     private void Window_KeyDown(object? sender, KeyEventArgs e)
     {
@@ -111,12 +111,18 @@ public partial class CaptureResultWindow : Window
             await MessageDialog.ShowAsync(this, "Couldn't copy to the clipboard", "The clipboard isn't available right now. Try again, or save the image instead.", isError: true);
     }
 
-    private async void Cloud_Click(object? sender, RoutedEventArgs e) =>
-        await new S3UploadWindow(_image).ShowModalAsync(this);
+    /// <summary>Raised after each upload to S3.</summary>
+    public event Action<S3Upload>? Uploaded;
+
+    private async void Cloud_Click(object? sender, RoutedEventArgs e)
+    {
+        if (await new S3UploadWindow(_image).ShowModalAsync<S3Upload?>(this) is { } upload)
+            Uploaded?.Invoke(upload);
+    }
 
     private async void Save_Click(object? sender, RoutedEventArgs e)
     {
         if (await SaveImage.SaveAsAsync(this, _image, _saveFolder()) is { } path)
-            SavedPath = path;
+            Saved?.Invoke(path);
     }
 }
