@@ -41,7 +41,6 @@ public sealed class HotkeyListener
 
     /// <summary>The hotkey was pressed but the screenshot failed. Raised on the listener thread.</summary>
     public event Action<string>? Failed;
-
     public Hotkey Hotkey
     {
         get => _hotkey;

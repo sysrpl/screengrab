@@ -140,6 +140,27 @@ internal static class X11
     public static extern int XChangeWindowAttributes(IntPtr display, IntPtr window, ulong valueMask, IntPtr attributes);
 
     [DllImport(LibX11)]
+    public static extern int XRaiseWindow(IntPtr display, IntPtr window);
+
+    [DllImport(LibX11)]
+    public static extern IntPtr XInternAtom(IntPtr display, string name, bool onlyIfExists);
+
+    [DllImport(LibX11)]
+    public static extern int XGetWindowProperty(IntPtr display, IntPtr window, IntPtr property, long offset, long length,
+        bool delete, IntPtr requestedType, out IntPtr actualType, out int actualFormat, out ulong itemCount,
+        out ulong bytesAfter, out IntPtr data);
+
+    [DllImport(LibX11)]
+    public static extern int XGetTransientForHint(IntPtr display, IntPtr window, out IntPtr parent);
+
+    [DllImport(LibX11)]
+    public static extern int XSendEvent(IntPtr display, IntPtr window, bool propagate, long eventMask, IntPtr eventSend);
+
+    /// <summary><paramref name="time"/> zero is CurrentTime.</summary>
+    [DllImport(LibX11)]
+    public static extern int XSetInputFocus(IntPtr display, IntPtr window, int revertTo, IntPtr time);
+
+    [DllImport(LibX11)]
     public static extern int XNextEvent(IntPtr display, IntPtr eventReturn);
 
     [DllImport(LibX11)]

@@ -5,7 +5,6 @@
         Title="Screen Grab"
         Width="440" Height="340"
         CanResize="False"
-        Topmost="True"
         WindowStartupLocation="CenterScreen"
         SystemDecorations="None"
         TransparencyLevelHint="Transparent"

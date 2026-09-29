@@ -11,8 +11,10 @@ namespace screengrab.Interop;
 /// Cinnamon's panel is drawn by the compositor, which keeps an input area of its own over it,
 /// so presses there go to the panel. <see cref="InputGrab"/> takes the mouse and keyboard, so
 /// every press, drag and key comes to the window wherever it is on the screen.
+/// <see cref="BringToFront"/> brings an ordinary window to the front after a hotkey screenshot,
+/// and <see cref="LowerOneStep"/> moves one down a place among the desktop's windows.
 ///
-/// Anywhere but X11 these do nothing.
+/// Anywhere but X11 these do nothing (BringToFront falls back to Activate).
 /// </summary>
 internal static class OverlayWindow
 {
@@ -43,6 +45,159 @@ internal static class OverlayWindow
                 Marshal.FreeHGlobal(attributes);
             }
         });
+    }
+
+    /// <summary>XSetInputFocus: if the window goes away, the focus goes to its parent.</summary>
+    private const int RevertToParent = 2;
+
+    /// <summary>
+    /// Brings a window to the front and gives it the keyboard focus, even when Screen Grab wasn't
+    /// the program in use. <see cref="Window.Activate"/> only asks Cinnamon, whose focus stealing
+    /// prevention refuses after a hotkey screenshot (the key press went to another program). So
+    /// this raises the window and sets the focus with the X server directly, which Cinnamon
+    /// can't refuse; it sees the change and treats the window as active. The window must be on
+    /// screen. Anywhere but X11 it's a plain Activate.
+    /// </summary>
+    public static void BringToFront(Window window)
+    {
+        if (Xid(window) is not { } xid)
+        {
+            window.Activate();
+            return;
+        }
+
+        WithDisplay(display =>
+        {
+            X11.XRaiseWindow(display, xid);
+            X11.XSetInputFocus(display, xid, RevertToParent, IntPtr.Zero);
+        });
+    }
+
+    /// <summary>The predefined WINDOW atom, the type of _NET_CLIENT_LIST_STACKING.</summary>
+    private static readonly IntPtr XA_WINDOW = 33;
+
+    // A ClientMessage event (64-bit layout): type, window, message_type, format, then 5 longs of data.
+    private const int ClientMessage = 33;
+    private const int MessageWindowOffset = 32;
+    private const int MessageTypeOffset = 40;
+    private const int MessageFormatOffset = 48;
+    private const int MessageDataOffset = 56;
+    private const long SubstructureNotifyMask = 1L << 19;
+    private const long SubstructureRedirectMask = 1L << 20;
+
+    /// <summary>_NET_RESTACK_WINDOW's source indication for a pager, such as the panel's window list.</summary>
+    private const long SourcePager = 2;
+
+    /// <summary>XConfigureWindow's stack mode: just below the sibling.</summary>
+    private const long StackBelow = 1;
+
+    /// <summary>
+    /// Moves a window one place down among the desktop's windows: just below the window that's
+    /// directly under it (from the window manager's _NET_CLIENT_LIST_STACKING, bottom to top).
+    /// Nothing happens if it's already at the bottom. The move is asked of the window manager
+    /// with _NET_RESTACK_WINDOW, as a pager (the panel's window list) would. Anywhere but X11 it
+    /// does nothing.
+    /// </summary>
+    public static void LowerOneStep(Window window)
+    {
+        if (Xid(window) is not { } xid)
+            return;
+
+        WithDisplay(display =>
+        {
+            var root = X11.XDefaultRootWindow(display);
+            var stackingAtom = X11.XInternAtom(display, "_NET_CLIENT_LIST_STACKING", false);
+            if (X11.XGetWindowProperty(display, root, stackingAtom, 0, 4096, false, XA_WINDOW,
+                    out _, out var format, out var count, out _, out var data) != X11.Success || data == IntPtr.Zero)
+                return;
+
+            IntPtr below = IntPtr.Zero;
+            try
+            {
+                // Format 32 comes as one long per window.
+                for (var i = 1; format == 32 && i < (int)count; i++)
+                {
+                    if (Marshal.ReadIntPtr(data, i * sizeof(long)) == xid)
+                    {
+                        below = Marshal.ReadIntPtr(data, (i - 1) * sizeof(long));
+                        break;
+                    }
+                }
+            }
+            finally
+            {
+                X11.XFree(data);
+            }
+            if (below == IntPtr.Zero)
+                return;
+
+            var message = Marshal.AllocHGlobal(X11.XEventSize);
+            try
+            {
+                for (var i = 0; i < X11.XEventSize; i += sizeof(long))
+                    Marshal.WriteInt64(message, i, 0);
+                Marshal.WriteInt32(message, 0, ClientMessage);
+                Marshal.WriteIntPtr(message, MessageWindowOffset, xid);
+                Marshal.WriteIntPtr(message, MessageTypeOffset, X11.XInternAtom(display, "_NET_RESTACK_WINDOW", false));
+                Marshal.WriteInt32(message, MessageFormatOffset, 32);
+                // Source, then the sibling, then where to go relative to it.
+                Marshal.WriteInt64(message, MessageDataOffset, SourcePager);
+                Marshal.WriteIntPtr(message, MessageDataOffset + sizeof(long), below);
+                Marshal.WriteInt64(message, MessageDataOffset + 2 * sizeof(long), StackBelow);
+                X11.XSendEvent(display, root, false, SubstructureRedirectMask | SubstructureNotifyMask, message);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(message);
+            }
+        });
+    }
+
+    /// <summary>
+    /// Whether the window, or one of its dialogs, has the focus: the window manager's active
+    /// window (_NET_ACTIVE_WINDOW) is this one, or its parent links (WM_TRANSIENT_FOR) lead back
+    /// here. That covers dialogs of dialogs, and the Save dialog, which the desktop shows for
+    /// Avalonia but tied to this window. Anywhere but X11 it's the window's own IsActive.
+    /// </summary>
+    public static bool HasFocusWithin(Window window)
+    {
+        if (Xid(window) is not { } xid)
+            return window.IsActive;
+
+        var focused = false;
+        WithDisplay(display =>
+        {
+            var root = X11.XDefaultRootWindow(display);
+            var activeAtom = X11.XInternAtom(display, "_NET_ACTIVE_WINDOW", false);
+            if (X11.XGetWindowProperty(display, root, activeAtom, 0, 1, false, XA_WINDOW,
+                    out _, out var format, out var count, out _, out var data) != X11.Success || data == IntPtr.Zero)
+                return;
+
+            IntPtr active;
+            try
+            {
+                active = format == 32 && count == 1 ? Marshal.ReadIntPtr(data) : IntPtr.Zero;
+            }
+            finally
+            {
+                X11.XFree(data);
+            }
+
+            // A few steps up is plenty (capture window, Cloud, Settings, a message); the limit
+            // guards against a loop of parent links.
+            for (var step = 0; step < 8 && active != IntPtr.Zero; step++)
+            {
+                if (active == xid)
+                {
+                    focused = true;
+                    return;
+                }
+                if (X11.XGetTransientForHint(display, active, out var parent) == 0)
+                    return;
+                active = parent;
+            }
+        });
+        return focused;
     }
 
     /// <summary>

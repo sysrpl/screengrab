@@ -2,6 +2,8 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
+using screengrab.Interop;
 using screengrab.Models;
 using screengrab.Services;
 
@@ -33,12 +35,49 @@ public partial class CaptureResultWindow : Window
         Preview.Source = _bitmap;
 
         KeyDown += Window_KeyDown;
+        // Come to the front after a capture, even over an always on top window (such as the
+        // piano roll's player while its F1 backdrop is up), so it starts always on top too.
+        // Cinnamon has to be managing the window before it will give it the focus, hence the wait.
+        Topmost = true;
+        _focusTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(0.2) };
+        _focusTimer.Tick += FocusTimer_Tick;
         Opened += (_, _) =>
         {
-            Activate();
             CopyButton.Focus();
+            DispatcherTimer.RunOnce(() =>
+            {
+                OverlayWindow.BringToFront(this);
+                _focusTimer.Start();
+            }, TimeSpan.FromSeconds(0.5));
         };
-        Closed += (_, _) => _bitmap.Dispose();
+        Closed += (_, _) =>
+        {
+            _focusTimer.Stop();
+            _bitmap.Dispose();
+        };
+    }
+
+    /// <summary>Checks whether the window still has the focus, from when it's given it until it's lost.</summary>
+    private readonly DispatcherTimer _focusTimer;
+
+    /// <summary>
+    /// Once another window has the focus, this becomes an ordinary window again: always on top
+    /// comes off, and on the next check it moves one place down, below the window under it
+    /// (Cinnamon puts a window leaving always on top at the top of the ordinary ones, over the
+    /// window just clicked). The next check gives Cinnamon time to move it first. Its own dialogs
+    /// (Save, Cloud, messages) having the focus counts as it having the focus.
+    /// </summary>
+    private void FocusTimer_Tick(object? sender, EventArgs e)
+    {
+        if (OverlayWindow.HasFocusWithin(this))
+            return;
+        if (Topmost)
+        {
+            Topmost = false;
+            return;
+        }
+        _focusTimer.Stop();
+        OverlayWindow.LowerOneStep(this);
     }
 
     /// <summary>A path the capture was saved to, if any.</summary>
