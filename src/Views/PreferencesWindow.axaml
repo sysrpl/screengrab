@@ -1,0 +1,69 @@
+<v:DialogWindow xmlns="https://github.com/avaloniaui"
+        xmlns:v="using:screengrab.Views"
+        xmlns:h="using:screengrab.Helpers"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="screengrab.Views.PreferencesWindow"
+        Title="Preferences"
+        SizeToContent="Height"
+        Width="580"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+    <DockPanel>
+        <StackPanel Classes="dialogButtons" DockPanel.Dock="Bottom">
+            <Button Content="Cancel" IsCancel="True" Click="Cancel_Click" />
+            <Button Content="OK" Classes="accent" IsDefault="True" Click="Ok_Click" />
+        </StackPanel>
+
+        <!-- Sections are 16px apart, twice the space inside them, as they have no boxes. -->
+        <StackPanel Margin="16,16,16,8" Spacing="16">
+            <!-- Hotkey -->
+            <StackPanel>
+                <TextBlock Classes="groupTitle" Text="Hotkey" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="Take a screenshot with" VerticalAlignment="Center" />
+                    <ComboBox x:Name="HotkeyCombo" MinWidth="200"
+                              h:Tip.Title="Hotkey"
+                              h:Tip.Text="Works anywhere, even while another program's menu is open. Super+Print Screen is the only one Cinnamon doesn't use itself." />
+                </StackPanel>
+                <!-- Shown when Cinnamon also uses the hotkey, or Screen Grab has taken shortcuts from it. -->
+                <Border x:Name="ConflictPanel" Background="{DynamicResource MintViewBrush}" CornerRadius="3"
+                        Padding="10,8" Margin="0,8,0,0" IsVisible="False">
+                    <DockPanel>
+                        <Button x:Name="ConflictButton" DockPanel.Dock="Right" Margin="8,0,0,0" Click="Conflict_Click" />
+                        <TextBlock x:Name="ConflictText" TextWrapping="Wrap" VerticalAlignment="Center" />
+                    </DockPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- Save folder -->
+            <StackPanel>
+                <TextBlock Classes="groupTitle" Text="Save folder" />
+                <TextBlock Classes="dim" Text="Where Save puts screenshots, and where Save as starts." TextWrapping="Wrap" Margin="0,0,0,8" />
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Margin="8,0,0,0" Click="Browse_Click"
+                            h:Tip.Title="Browse" h:Tip.Text="Choose the folder screenshots are saved in.">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Classes="icon" Text="&#xF0DCF;" />
+                            <TextBlock Classes="label" Text="Browse" />
+                        </StackPanel>
+                    </Button>
+                    <TextBox x:Name="FolderBox" />
+                </DockPanel>
+            </StackPanel>
+
+            <!-- Screenshots -->
+            <StackPanel Spacing="4">
+                <TextBlock Classes="groupTitle" Text="Screenshots" Margin="0,0,0,4" />
+                <CheckBox x:Name="PointerCheck" Content="Include the mouse pointer" />
+                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4">
+                    <TextBlock Text="Delayed screenshots wait" VerticalAlignment="Center" />
+                    <NumericUpDown x:Name="DelaySpin" Width="110" Minimum="1" Maximum="60" Increment="1" FormatString="0" />
+                    <TextBlock Text="seconds" VerticalAlignment="Center" />
+                </StackPanel>
+                <CheckBox x:Name="AutostartCheck" Content="Start Screen Grab when I log in (in the system tray)" />
+            </StackPanel>
+        </StackPanel>
+    </DockPanel>
+</v:DialogWindow>

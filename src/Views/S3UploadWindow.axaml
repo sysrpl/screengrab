@@ -1,0 +1,57 @@
+<v:DialogWindow xmlns="https://github.com/avaloniaui"
+        xmlns:v="using:screengrab.Views"
+        xmlns:h="using:screengrab.Helpers"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="screengrab.Views.S3UploadWindow"
+        Title="Upload to S3"
+        Width="440"
+        SizeToContent="Height"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        SystemDecorations="None"
+        TransparencyLevelHint="Transparent"
+        Background="Transparent">
+
+    <!-- No title bar: the row of buttons takes its place, as in the capture window. The window is
+         20px bigger all round than the 400px wide panel, to draw its shadow in. -->
+    <Border Classes="frame">
+        <DockPanel>
+            <!-- Drag the title bar (between its buttons) to move the window. -->
+            <Border Classes="titleBar" DockPanel.Dock="Top" h:TitleBar.MovesWindow="True">
+                <Panel>
+                    <TextBlock Classes="windowTitle" Text="Cloud" />
+                    <DockPanel>
+                        <Button Classes="close" DockPanel.Dock="Left" Margin="8,0,0,0" Click="Close_Click"
+                                h:Tip.Title="Close (Escape)">
+                            <TextBlock Classes="icon" Text="&#xF0156;" />
+                        </Button>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="8">
+                            <Button Classes="green iconOnly" Click="Settings_Click"
+                                    h:Tip.Title="S3 settings" h:Tip.Text="Your AWS keys, and the bucket and folder to upload to.">
+                                <TextBlock Classes="icon" Text="&#xF08BB;" HorizontalAlignment="Center" />
+                            </Button>
+                            <Button x:Name="UploadButton" Classes="accent green" Content="Upload" IsDefault="True" Click="Upload_Click"
+                                    h:Tip.Title="Upload" h:Tip.Text="Upload the image to the bucket and folder set with the gear button." />
+                        </StackPanel>
+                    </DockPanel>
+                </Panel>
+            </Border>
+
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" Margin="16">
+                <TextBlock Grid.Row="0" Text="Format" VerticalAlignment="Center" Margin="0,0,16,8" />
+                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="16" Margin="0,0,0,8">
+                    <RadioButton x:Name="PngRadio" GroupName="Format" Content="PNG" />
+                    <RadioButton x:Name="GifRadio" GroupName="Format" Content="GIF" />
+                    <RadioButton x:Name="JpgRadio" GroupName="Format" Content="JPG" />
+                </StackPanel>
+
+                <TextBlock Grid.Row="1" Text="Filename" VerticalAlignment="Center" Margin="0,0,16,0" />
+                <TextBox x:Name="NameBox" Grid.Row="1" Grid.Column="1" />
+
+                <!-- Where it will go, or what's wrong. -->
+                <TextBlock x:Name="InfoText" Grid.Row="2" Grid.Column="1" Classes="dim" TextWrapping="Wrap" Margin="0,8,0,0" />
+            </Grid>
+        </DockPanel>
+    </Border>
+</v:DialogWindow>

@@ -1,0 +1,41 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:h="using:screengrab.Helpers"
+        x:Class="screengrab.Views.CaptureResultWindow"
+        Title="Screen Grab"
+        Width="440" Height="340"
+        CanResize="False"
+        Topmost="True"
+        WindowStartupLocation="CenterScreen"
+        SystemDecorations="None"
+        TransparencyLevelHint="Transparent"
+        Background="Transparent">
+
+    <!-- No title bar: the row of buttons takes its place. The top corners are rounded and the bottom
+         ones square. Cinnamon doesn't draw a shadow for a window without its title bar, so the window
+         is 20px bigger all round than the 400x300 panel, to draw one in. -->
+    <Border Classes="frame">
+        <DockPanel>
+            <!-- Drag the title bar (between its buttons) to move the window. -->
+            <Border Classes="titleBar" DockPanel.Dock="Top" h:TitleBar.MovesWindow="True">
+                <DockPanel>
+                    <Button Classes="close" DockPanel.Dock="Left" Margin="8,0,0,0" Click="Close_Click"
+                            h:Tip.Title="Close (Escape)">
+                        <TextBlock Classes="icon" Text="&#xF0156;" />
+                    </Button>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="8">
+                        <Button x:Name="CopyButton" Classes="accent green" Content="Copy" Click="Copy_Click"
+                                h:Tip.Title="Copy to clipboard (Ctrl+C)" h:Tip.Text="Copy the image, to paste into another program." />
+                        <Button Classes="green" Content="Save" Click="Save_Click"
+                                h:Tip.Title="Save (Ctrl+S)" h:Tip.Text="Save the image as a PNG, JPG or GIF file." />
+                        <Button Classes="green" Content="Cloud" Click="Cloud_Click"
+                                h:Tip.Title="Upload to S3" h:Tip.Text="Upload the image to an Amazon S3 bucket." />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <!-- The capture, shrunk to fit the window if it's bigger; never enlarged. Escape closes the window. -->
+            <Image x:Name="Preview" Stretch="Uniform" StretchDirection="DownOnly" Margin="8" />
+        </DockPanel>
+    </Border>
+</Window>

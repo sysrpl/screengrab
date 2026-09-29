@@ -1,0 +1,21 @@
+<v:DialogWindow xmlns="https://github.com/avaloniaui"
+        xmlns:v="using:screengrab.Views"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="screengrab.Views.ConfirmDialog"
+        Title="Confirm"
+        SizeToContent="WidthAndHeight"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+    <DockPanel>
+        <StackPanel Classes="dialogButtons" DockPanel.Dock="Bottom">
+            <Button Content="Yes" Click="Yes_Click" IsDefault="True" />
+            <Button Content="No" Click="No_Click" IsCancel="True" />
+        </StackPanel>
+
+        <StackPanel Margin="20,20,20,4" Spacing="16" MinWidth="300" MaxWidth="420">
+            <TextBlock x:Name="MessageText" TextWrapping="Wrap" />
+        </StackPanel>
+    </DockPanel>
+</v:DialogWindow>

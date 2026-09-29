@@ -1,0 +1,64 @@
+<v:DialogWindow xmlns="https://github.com/avaloniaui"
+        xmlns:v="using:screengrab.Views"
+        xmlns:h="using:screengrab.Helpers"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="screengrab.Views.S3SettingsWindow"
+        Title="S3 Settings"
+        Width="500"
+        SizeToContent="Height"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        SystemDecorations="None"
+        TransparencyLevelHint="Transparent"
+        Background="Transparent">
+
+    <!-- No title bar: its own top row takes its place, with OK and Cancel, as in Upload to S3.
+         The window is 20px bigger all round than the 460px wide panel, to draw its shadow in. -->
+    <Border Classes="frame">
+        <DockPanel>
+            <!-- Drag the title bar (between its buttons) to move the window. -->
+            <Border Classes="titleBar" DockPanel.Dock="Top" h:TitleBar.MovesWindow="True">
+                <Panel>
+                    <TextBlock Classes="windowTitle" Text="Settings" />
+                    <DockPanel>
+                        <Button Classes="close" DockPanel.Dock="Left" Margin="8,0,0,0" Click="Cancel_Click"
+                                h:Tip.Title="Close (Escape)" h:Tip.Text="Close without saving, like Cancel.">
+                            <TextBlock Classes="icon" Text="&#xF0156;" />
+                        </Button>
+                        <StackPanel Classes="dialogButtons">
+                            <Button Content="Cancel" IsCancel="True" Click="Cancel_Click" />
+                            <Button Content="OK" Classes="accent" IsDefault="True" Click="Ok_Click" />
+                        </StackPanel>
+                    </DockPanel>
+                </Panel>
+            </Border>
+
+            <StackPanel Margin="16" Spacing="6">
+                <TextBlock Text="Access key ID" />
+                <TextBox x:Name="AccessKeyBox" Watermark="AKIA..." />
+
+                <TextBlock Text="Secret access key" Margin="0,6,0,0" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBox x:Name="SecretKeyBox" PasswordChar="•" />
+                    <CheckBox x:Name="ShowSecretCheck" Grid.Column="1" Content="Show" Margin="8,0,0,0" />
+                </Grid>
+
+                <TextBlock Text="Region" Margin="0,6,0,0" />
+                <ComboBox x:Name="RegionBox" HorizontalAlignment="Stretch" />
+
+                <TextBlock Text="Bucket" Margin="0,6,0,0" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBox x:Name="BucketBox" Watermark="my-bucket" />
+                    <Button x:Name="ListButton" Grid.Column="1" Content="Choose" Margin="8,0,0,0" Click="ListBuckets_Click"
+                            h:Tip.Title="Choose a bucket" h:Tip.Text="List the buckets these keys can see, and pick one." />
+                </Grid>
+
+                <TextBlock Text="Folder" Margin="0,6,0,0" />
+                <TextBox x:Name="FolderBox" Watermark="screenshots (empty for the top of the bucket)" />
+
+                <TextBlock x:Name="ErrorText" Classes="error" TextWrapping="Wrap" IsVisible="False" Margin="0,6,0,0" />
+            </StackPanel>
+        </DockPanel>
+    </Border>
+</v:DialogWindow>

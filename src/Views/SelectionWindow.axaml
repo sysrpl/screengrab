@@ -1,0 +1,25 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="using:screengrab.Controls"
+        x:Class="screengrab.Views.SelectionWindow"
+        Title="Screen Grab: select an area"
+        SystemDecorations="None"
+        CanResize="False"
+        ShowInTaskbar="False"
+        Topmost="True"
+        WindowStartupLocation="Manual"
+        Background="Black"
+        Cursor="Cross">
+
+    <Panel>
+        <!-- The screenshot at its real size, exactly over the screen it was taken from. -->
+        <c:CaptureView x:Name="Picture" Zoom="1" MoveInside="False" DimWhenEmpty="True" />
+
+        <!-- How to use it; hidden once there's a selection, and never in the way of the mouse. -->
+        <Border x:Name="HintBar" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,32,0,0"
+                Background="#E6262626" BorderBrush="#5A5A5A" BorderThickness="1" CornerRadius="6"
+                Padding="16,10" IsHitTestVisible="False">
+            <TextBlock Text="Drag to select an area  ·  Enter captures it  ·  Esc cancels" Foreground="White" />
+        </Border>
+    </Panel>
+</Window>

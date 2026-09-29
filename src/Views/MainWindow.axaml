@@ -1,0 +1,177 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:h="using:screengrab.Helpers"
+        xmlns:c="using:screengrab.Controls"
+        xmlns:m="using:screengrab.Models"
+        x:Class="screengrab.Views.MainWindow"
+        Title="Screen Grab"
+        Width="1180" Height="760"
+        MinWidth="900" MinHeight="420"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Styles>
+        <!-- Icon-only buttons: flat and 24x24, like toolbar buttons. -->
+        <Style Selector="Button.icon">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+        <Style Selector="Button.icon TextBlock.icon">
+            <Setter Property="FontSize" Value="18" />
+        </Style>
+        <!-- A thin line between groups of toolbar buttons. -->
+        <Style Selector="Border.divider">
+            <Setter Property="Width" Value="1" />
+            <Setter Property="Margin" Value="0,3" />
+            <Setter Property="Background" Value="{DynamicResource MintFrameBrush}" />
+        </Style>
+        <Style Selector="ListBox#HistoryList ListBoxItem">
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="CornerRadius" Value="3" />
+            <Setter Property="Margin" Value="4,0" />
+        </Style>
+    </Window.Styles>
+
+    <DockPanel>
+        <!-- Toolbar -->
+        <Border DockPanel.Dock="Top" Background="{DynamicResource MintChromeBrush}">
+            <DockPanel Margin="8">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4" Margin="8,0,0,0">
+                    <Button Classes="icon" Click="Preferences_Click"
+                            h:Tip.Title="Preferences"
+                            h:Tip.Text="The hotkey, what happens after a screenshot, where screenshots are saved, and starting at login.">
+                        <TextBlock Classes="icon" Text="&#xF08BB;" />
+                    </Button>
+                    <Button Classes="icon" Click="About_Click"
+                            h:Tip.Title="About Screen Grab" h:Tip.Text="Version, what the program does, and build information.">
+                        <TextBlock Classes="icon" Text="&#xF02FD;" />
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Classes="accent" Click="CaptureNow_Click"
+                            h:Tip.Title="Take a screenshot (Ctrl+N)"
+                            h:Tip.Text="Hide this window and take a screenshot of the whole screen.">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Classes="icon" Text="&#xF0E51;" />
+                            <TextBlock Classes="label" Text="Capture" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="DelayButton" Click="CaptureDelayed_Click"
+                            h:Tip.Title="Delayed screenshot"
+                            h:Tip.Text="Hide this window, wait, then take a screenshot. Use the time to open a menu or hover over something. Set the wait in Preferences.">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Classes="icon" Text="&#xF051B;" />
+                            <TextBlock x:Name="DelayLabel" Classes="label" Text="In 5 s" />
+                        </StackPanel>
+                    </Button>
+
+                    <Border Classes="divider" />
+
+                    <Button x:Name="CopyButton" Click="Copy_Click"
+                            h:Tip.Title="Copy (Ctrl+C)"
+                            h:Tip.Text="Copy the selected area to the clipboard, or the whole screenshot when nothing is selected.">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Classes="icon" Text="&#xF018F;" />
+                            <TextBlock Classes="label" Text="Copy" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="SaveButton" Click="Save_Click"
+                            h:Tip.Title="Save (Ctrl+S)"
+                            h:Tip.Text="Save the selected area (or the whole screenshot) as a PNG in the save folder, named with the date and time.">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Classes="icon" Text="&#xF0818;" />
+                            <TextBlock Classes="label" Text="Save" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="SaveAsButton" Click="SaveAs_Click"
+                            h:Tip.Title="Save as (Ctrl+Shift+S)"
+                            h:Tip.Text="Choose where to save the selected area (or the whole screenshot) as a PNG.">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Classes="icon" Text="&#xF0CFC;" />
+                            <TextBlock Classes="label" Text="Save as" />
+                        </StackPanel>
+                    </Button>
+                    <Button Click="OpenFolder_Click"
+                            h:Tip.Title="Open the save folder" h:Tip.Text="Show the folder screenshots are saved in.">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Classes="icon" Text="&#xF0DCF;" />
+                            <TextBlock Classes="label" Text="Folder" />
+                        </StackPanel>
+                    </Button>
+
+                    <Border Classes="divider" />
+
+                    <Button x:Name="ScreenButton"
+                            h:Tip.Title="Select a monitor"
+                            h:Tip.Text="Select just one monitor's part of the screenshot, or all of it.">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Classes="icon" Text="&#xF0379;" />
+                            <TextBlock Classes="label" Text="Select screen" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="ZoomButton" Click="Zoom_Click"
+                            h:Tip.Title="Zoom"
+                            h:Tip.Text="Switch between fitting the screenshot in the window and showing it at full size. Ctrl+wheel zooms in and out.">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Classes="icon" Text="&#xF06ED;" />
+                            <TextBlock x:Name="ZoomLabel" Classes="label" Text="Fit" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Status bar -->
+        <Border DockPanel.Dock="Bottom" Background="{DynamicResource MintChromeBrush}">
+            <DockPanel Margin="8,5">
+                <TextBlock x:Name="HotkeyText" DockPanel.Dock="Right" Classes="dim" Margin="16,0,0,0" />
+                <TextBlock x:Name="SelectionText" DockPanel.Dock="Right" Classes="dim" Margin="16,0,0,0" />
+                <TextBlock x:Name="StatusText" TextTrimming="CharacterEllipsis" />
+            </DockPanel>
+        </Border>
+
+        <!-- This session's screenshots -->
+        <Border DockPanel.Dock="Right" Width="200" Background="{DynamicResource MintViewBrush}">
+            <DockPanel>
+                <DockPanel DockPanel.Dock="Top" Margin="12,8,8,8">
+                    <Button x:Name="DeleteButton" Classes="icon" DockPanel.Dock="Right" Click="Delete_Click"
+                            h:Tip.Title="Remove (Delete)"
+                            h:Tip.Text="Remove this screenshot from the list. Files it was saved to are kept.">
+                        <TextBlock Classes="icon" Text="&#xF09E7;" />
+                    </Button>
+                    <TextBlock Text="Screenshots" FontWeight="Bold" VerticalAlignment="Center" />
+                </DockPanel>
+                <ListBox x:Name="HistoryList" Background="Transparent" SelectionMode="Single">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="m:CaptureItem">
+                            <StackPanel Spacing="4">
+                                <Image Source="{Binding Thumbnail}" Width="160" Height="100" Stretch="Uniform" />
+                                <TextBlock Text="{Binding Caption}" HorizontalAlignment="Center" FontSize="12" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- The screenshot -->
+        <Panel Background="#262626">
+            <StackPanel x:Name="EmptyMessage" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                <TextBlock Text="&#xF0E51;" FontFamily="{StaticResource MaterialDesignIcons}" FontSize="64"
+                           HorizontalAlignment="Center" Foreground="{DynamicResource MintAccentBrush}" />
+                <TextBlock x:Name="EmptyHotkeyText" FontSize="18" HorizontalAlignment="Center" Text="Press Print Screen to take a screenshot" />
+                <TextBlock Classes="dim" HorizontalAlignment="Center" TextAlignment="Center"
+                           Text="It works while menus are open, too. Then drag on the picture to select part of it." />
+            </StackPanel>
+            <ScrollViewer x:Name="PictureScroller"
+                          HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Disabled">
+                <!-- No tooltip: it would pop up while dragging. The status bar gives the hints instead. -->
+                <c:CaptureView x:Name="Picture" />
+            </ScrollViewer>
+        </Panel>
+    </DockPanel>
+</Window>
