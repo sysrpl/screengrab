@@ -132,10 +132,6 @@ public partial class S3UploadWindow : DialogWindow
         SetUploading(true);
         try
         {
-            if (await S3Uploader.ExistsAsync(_settings, key, _cancel.Token) &&
-                !await ConfirmDialog.AskAsync(this, "Replace file", $"{name}{extension} is already in s3://{_settings.Bucket}. Replace it?"))
-                return;
-
             var data = await Task.Run(() => ImageEncoder.Encode(_image, extension));
             var url = await S3Uploader.UploadAsync(_settings, key, data, ImageEncoder.ContentType(extension), _cancel.Token);
             if (Clipboard is { } clipboard)

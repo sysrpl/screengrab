@@ -35,7 +35,7 @@ If a menu was open when you pressed Print Screen, that program still holds the m
 
 ## Uploading to Amazon S3
 
-**Cloud** opens the **Cloud** window: choose the format (PNG, GIF or JPG) and the file name (the date and time to start with), then **Upload**. The line below shows where it will go (`s3://bucket/folder/name.png`); if a file with that name is already there, you're asked before it's replaced. When the upload is done, the file's link is copied to the clipboard and opened in your default browser, and the window closes. To copy the link again later, select the capture in the main window and click **Copy link**; the link is kept for as long as the capture is in the list, between sessions too.
+**Cloud** opens the **Cloud** window: choose the format (PNG, GIF or JPG) and the file name (the date and time to start with), then **Upload**. The line below shows where it will go (`s3://bucket/folder/name.png`); a file with that name already there is replaced. When the upload is done, the file's link is copied to the clipboard and opened in your default browser, and the window closes. To copy the link again later, select the capture in the main window and click **Copy link**; the link is kept for as long as the capture is in the list, between sessions too.
 
 The link uses the bucket's CloudFront domain when a CloudFront distribution serves the bucket (its alternate domain name, such as `https://images.example.com/folder/name.png`, or else its `dxxxx.cloudfront.net` name, allowing for the distribution's origin path), found the same way S3 File Explorer finds it. Otherwise it's the S3 URL (`https://bucket.s3.region.amazonaws.com/folder/name.png`).
 
@@ -43,7 +43,7 @@ Uploads are public: each file is stored with the canned ACL `public-read`, so it
 
 The gear button, to the left of **Upload** in the title bar, opens **Settings**, with **Cancel** and **OK** in its title bar. It sets your AWS access key ID and secret access key, the region, the bucket (type it, or **Choose** from the buckets your keys can see) and the folder in it. They're kept encrypted (AES 256 in GCM mode) in `~/.config/screengrab/s3.dat`, with the key in `s3.key` beside it, both readable only by you, the same way S3 File Explorer keeps its profiles. The format you last uploaded is remembered.
 
-The keys need `s3:PutObject` and `s3:PutObjectAcl` on the folder; `s3:GetObject` (to check for an existing file), `s3:ListAllMyBuckets` (for **Choose**), `s3:GetBucketLocation` and `cloudfront:ListDistributions` (for CloudFront links) are used when allowed. **Delete everywhere** in the main window needs `s3:DeleteObject`, and `cloudfront:CreateInvalidation` to clear CloudFront's cache.
+The keys need `s3:PutObject` and `s3:PutObjectAcl` on the folder; `s3:ListAllMyBuckets` (for **Choose**), `s3:GetBucketLocation` and `cloudfront:ListDistributions` (for CloudFront links) are used when allowed. **Delete everywhere** in the main window needs `s3:DeleteObject`, and `cloudfront:CreateInvalidation` to clear CloudFront's cache.
 
 ## Features
 

@@ -28,6 +28,8 @@
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.22" />
     <PackageReference Include="AWSSDK.CloudFront" Version="4.0.101.4" />
     <PackageReference Include="AWSSDK.S3" Version="4.0.103.3" />
+    <!-- Comes with Avalonia (its tray icon uses it); used directly to notice the tray host restarting. -->
+    <PackageReference Include="Tmds.DBus.Protocol" Version="0.21.3" />
   </ItemGroup>
 
 </Project>

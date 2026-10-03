@@ -24,6 +24,18 @@ public partial class App : Application
 
             var window = new MainWindow(new SettingsService());
             TrayIcon.SetIcons(this, [window.TrayIcon]);
+
+            // If the tray host restarts, hiding and showing the icon registers it with the new one.
+            var trayHost = new TrayHostWatcher();
+            trayHost.Restarted += () => Dispatcher.UIThread.Post(() =>
+            {
+                if (!window.TrayIcon.IsVisible)
+                    return;
+                window.TrayIcon.IsVisible = false;
+                window.TrayIcon.IsVisible = true;
+            });
+            _ = trayHost.StartAsync();
+
             if (Program.Instance is { } instance)
                 instance.ShowRequested += () => Dispatcher.UIThread.Post(window.ShowWindow);
 

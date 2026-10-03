@@ -24,21 +24,6 @@ public static class S3Uploader
         return (response.Buckets ?? []).Select(b => b.BucketName).Order(StringComparer.OrdinalIgnoreCase).ToList();
     }
 
-    /// <summary>Whether something is already stored under <paramref name="key"/>.</summary>
-    public static async Task<bool> ExistsAsync(S3Settings settings, string key, CancellationToken cancellationToken = default)
-    {
-        using var client = Client(settings, await BucketRegionAsync(settings, settings.Bucket, cancellationToken));
-        try
-        {
-            await client.GetObjectMetadataAsync(settings.Bucket, key, cancellationToken);
-            return true;
-        }
-        catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-        {
-            return false;
-        }
-    }
-
     /// <summary>
     /// Stores the bytes under <paramref name="key"/> as a public file (canned ACL public-read),
     /// replacing anything already there, and returns the file's link: on the bucket's CloudFront
